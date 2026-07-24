@@ -1,0 +1,22 @@
+# mcp-adc-exporter configuration.
+#
+# Each device is one ADC chip on a Linux spidev bus. Each channel maps an
+# analog input to a named metric series; scale/offset convert the measured
+# voltage into the physical unit you actually care about
+# (value = volts*scale + offset).
+listen: ":9958"
+devices:
+  - name: adc0
+    chip: mcp3008          # mcp3004|mcp3008|mcp3204|mcp3208
+    spidev: /dev/spidev0.0
+    speed_hz: 1350000      # optional; defaults per chip (1.35 MHz 10-bit, 1 MHz 12-bit)
+    vref: 3.3              # volts at the VREF pin (VDD on MCP30xx)
+    channels:
+      - index: 0
+        name: psu_12v
+        mode: single       # single (default) or differential
+        scale: 5.7         # e.g. voltage divider ratio
+        offset: 0.0
+      - index: 1
+        name: ambient_temp_c
+        scale: 100.0       # e.g. LM35: 10mV/degC
