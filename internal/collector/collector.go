@@ -80,6 +80,9 @@ func New(cfg *config.Config, openConn func(path string, speedHz uint32) (adc.Con
 				cfg:    cc,
 				labels: []string{dc.Name, spec.Name, fmt.Sprint(cc.Index), cc.Name},
 			})
+			// Pre-seed the error series at 0 so rate()/increase() can
+			// see the first failure.
+			c.readErrors.WithLabelValues(dc.Name, fmt.Sprint(cc.Index))
 		}
 		conn, err := openConn(dc.SPIDev, uint32(speed))
 		if err != nil {
@@ -121,6 +124,6 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 // Close releases all SPI connections.
 func (c *Collector) Close() {
 	for _, d := range c.devices {
-		d.dev.Close()
+		_ = d.dev.Close()
 	}
 }

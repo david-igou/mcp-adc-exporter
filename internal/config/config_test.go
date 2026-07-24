@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -39,12 +40,19 @@ devices:
 }
 
 func TestLoadErrors(t *testing.T) {
+	valid := "  - name: %s\n    spidev: %s\n    vref: 3.3\n    channels:\n      - {index: 0, name: x}\n"
+	a := fmt.Sprintf(valid, "a", "/dev/spidev0.0")
 	cases := map[string]string{
 		"no devices":     `listen: ":9958"`,
+		"missing name":   "devices:\n" + fmt.Sprintf(valid, `""`, "/dev/spidev0.0"),
+		"dup name":       "devices:\n" + a + fmt.Sprintf(valid, "a", "/dev/spidev0.1"),
+		"dup spidev":     "devices:\n" + a + fmt.Sprintf(valid, "b", "/dev/spidev0.0"),
 		"missing vref":   "devices:\n  - name: a\n    spidev: /dev/spidev0.0\n    channels:\n      - {index: 0, name: x}",
 		"missing spidev": "devices:\n  - name: a\n    vref: 3.3\n    channels:\n      - {index: 0, name: x}",
+		"no channels":    "devices:\n  - name: a\n    spidev: /dev/spidev0.0\n    vref: 3.3",
 		"bad mode":       "devices:\n  - name: a\n    spidev: /dev/spidev0.0\n    vref: 3.3\n    channels:\n      - {index: 0, name: x, mode: bogus}",
 		"dup channel":    "devices:\n  - name: a\n    spidev: /dev/spidev0.0\n    vref: 3.3\n    channels:\n      - {index: 0, name: x}\n      - {index: 1, name: x}",
+		"unknown key":    "devices:\n  - name: a\n    spidev: /dev/spidev0.0\n    vref: 3.3\n    channels:\n      - {index: 0, name: x, scail: 5.7}",
 	}
 	for name, content := range cases {
 		if _, err := Load(write(t, content)); err == nil {

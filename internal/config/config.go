@@ -2,7 +2,10 @@
 package config
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -40,7 +43,11 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 	var cfg Config
-	if err := yaml.Unmarshal(raw, &cfg); err != nil {
+	dec := yaml.NewDecoder(bytes.NewReader(raw))
+	// Reject unknown keys: a typo like "scail:" must fail loudly instead
+	// of silently shipping unscaled readings.
+	dec.KnownFields(true)
+	if err := dec.Decode(&cfg); err != nil && !errors.Is(err, io.EOF) {
 		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
 	if cfg.Listen == "" {
@@ -50,6 +57,7 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("%s: no devices configured", path)
 	}
 	seen := map[string]bool{}
+	seenSPIDev := map[string]string{}
 	for i := range cfg.Devices {
 		d := &cfg.Devices[i]
 		if d.Name == "" {
@@ -62,6 +70,10 @@ func Load(path string) (*Config, error) {
 		if d.SPIDev == "" {
 			return nil, fmt.Errorf("device %s: spidev is required", d.Name)
 		}
+		if other, ok := seenSPIDev[d.SPIDev]; ok {
+			return nil, fmt.Errorf("devices %s and %s share spidev %s", other, d.Name, d.SPIDev)
+		}
+		seenSPIDev[d.SPIDev] = d.Name
 		if d.VRef <= 0 {
 			return nil, fmt.Errorf("device %s: vref must be > 0", d.Name)
 		}

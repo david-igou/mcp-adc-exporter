@@ -48,6 +48,9 @@ func TestCollect(t *testing.T) {
 	defer c.Close()
 
 	want := `
+# HELP adc_read_errors_total SPI read failures, by device and channel.
+# TYPE adc_read_errors_total counter
+adc_read_errors_total{channel="3",device="adc0"} 0
 # HELP adc_channel_raw_code Raw straight-binary conversion code (0 .. 2^resolution-1).
 # TYPE adc_channel_raw_code gauge
 adc_channel_raw_code{channel="3",chip="mcp3008",device="adc0",name="battery"} 512
@@ -59,7 +62,7 @@ adc_channel_value{channel="3",chip="mcp3008",device="adc0",name="battery"} 3.8
 adc_channel_volts{channel="3",chip="mcp3008",device="adc0",name="battery"} 1.65
 `
 	if err := testutil.CollectAndCompare(c, strings.NewReader(want),
-		"adc_channel_volts", "adc_channel_raw_code", "adc_channel_value"); err != nil {
+		"adc_channel_volts", "adc_channel_raw_code", "adc_channel_value", "adc_read_errors_total"); err != nil {
 		t.Error(err)
 	}
 }

@@ -1,3 +1,5 @@
+//go:build linux
+
 // Package spi is a minimal Linux spidev client: open a /dev/spidevX.Y
 // device, set mode/speed, and run full-duplex transfers via
 // SPI_IOC_MESSAGE. It avoids a hardware-abstraction dependency because
@@ -53,15 +55,15 @@ func Open(path string, speedHz uint32) (*Conn, error) {
 	mode := uint8(0) // MCP3xxx support modes 0,0 and 1,1; use 0,0
 	bits := uint8(8)
 	if err := c.ioctl(iocWrMode, unsafe.Pointer(&mode)); err != nil {
-		f.Close()
+		_ = f.Close()
 		return nil, fmt.Errorf("%s: set mode: %w", path, err)
 	}
 	if err := c.ioctl(iocWrBitsPerWord, unsafe.Pointer(&bits)); err != nil {
-		f.Close()
+		_ = f.Close()
 		return nil, fmt.Errorf("%s: set bits per word: %w", path, err)
 	}
 	if err := c.ioctl(iocWrMaxSpeedHz, unsafe.Pointer(&speedHz)); err != nil {
-		f.Close()
+		_ = f.Close()
 		return nil, fmt.Errorf("%s: set speed: %w", path, err)
 	}
 	return c, nil

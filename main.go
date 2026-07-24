@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -55,13 +56,22 @@ func main() {
 	buildInfo.WithLabelValues(version, revision).Set(1)
 	reg.MustRegister(buildInfo)
 
-	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `<html><body><h1>mcp-adc-exporter</h1><p><a href="/metrics">Metrics</a></p></body></html>`)
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = fmt.Fprint(w, `<html><body><h1>mcp-adc-exporter</h1><p><a href="/metrics">Metrics</a></p></body></html>`)
 	})
+	srv := &http.Server{
+		Addr:              cfg.Listen,
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
 
 	log.Printf("mcp-adc-exporter %s listening on %s (%d device(s))", version, cfg.Listen, len(cfg.Devices))
-	if err := http.ListenAndServe(cfg.Listen, nil); err != nil {
+	if err := srv.ListenAndServe(); err != nil {
 		log.Print(err)
 		os.Exit(1)
 	}
