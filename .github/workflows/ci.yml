@@ -51,7 +51,7 @@ jobs:
       - name: Unit tests (race + coverage)
         run: make cover
       - name: Upload coverage
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage
           path: coverage.out
@@ -78,7 +78,7 @@ jobs:
           GOARM: "6" # ignored unless GOARCH=arm; v6 covers Pi Zero/1
         run: go build -ldflags "-s -w" -o mcp-adc-exporter-linux-${{ matrix.goarch }} .
       - name: Upload binary
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mcp-adc-exporter-linux-${{ matrix.goarch }}
           path: mcp-adc-exporter-linux-${{ matrix.goarch }}
