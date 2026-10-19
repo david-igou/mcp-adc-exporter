@@ -75,7 +75,11 @@ high-impedance sensors with an op-amp or readings will be low.
 
 ## Building
 
+Use Go 1.27.2 or newer. The `go.mod` directive also selects the patched
+toolchain automatically when `GOTOOLCHAIN=auto` is enabled.
+
 ```sh
 make all         # vet + test + build for the host
 make crossbuild  # linux amd64/arm64/armv6 into dist/
+make vulncheck   # scan the selected Go toolchain and dependencies
 ```
